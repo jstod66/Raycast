@@ -1,45 +1,75 @@
 from graphics import *
+import math
 
-class Particle:
- pos = [0,0]
- angle_resolution = 10 #degrees
+class Particle(Circle):
+	angle_resolution = 10 #degrees
 
- def __init__(self,x,y,theta):
- 	self.pos = [x,y]
- 	self.angle_resolution = theta
+	def setRes(self,theta):
+		self.angle_resolution = theta
 
- def draw(self,win):
- 	c = Circle(Point(self.pos[0],self.pos[1]),5)
- 	c.setFill('white')
- 	c.draw(win)
+class Ray(Point):
+	dir = [0,1]
 
-class Ray:
- source = [0,0]
- dir = [0,1]
+	def __init__(self,x,y,dir):
+ 		self.dir = dir
+ 		Point.__init__(self,x,y)
 
- def __init__(self,source,dir):
- 	self.source = source
- 	self.dir = dir
+	def updateDir(self,dir):
+ 		self.dir = dir
 
- def updateSource(self,source):
- 	self.source = source
+	def createPoint(self):
+		return Point(self.getX(),self.getY())
 
- def draw(self,intersect,win):
- 	RayLine = Line(Point(self.source[0],self.source[1]),Point(intersect[0],intersect[1]))
- 	RayLine.setFill('white')
- 	RayLine.draw(win)
+	def computeIntersect(self,Walls):
+ 		x3 = self.getX()
+ 		x4 = x3 + self.dir[0]
+ 		y3 = self.getY()
+ 		y4 = y3 + self.dir[1]
 
-class Wall:
- start = [0,0]
- end = [0,0]
+ 		closestPt = Point(0,0)
+ 		ShortestDist = float("inf")
+ 		collision = False
 
- def __init__(self,start,end):
- 	self.start = start
- 	self.end = end
+ 		for wall in Walls:
 
- def draw(self,win):
- 	WallLine = Line(Point(self.start[0],self.start[1]),Point(self.end[0],self.end[1]))
- 	WallLine.setFill('red')
- 	WallLine.setWidth(2)
- 	WallLine.draw(win)
+	 		x1 = wall.getP1().getX()
+	 		x2 = wall.getP2().getX()
+	 		y1 = wall.getP1().getY()
+	 		y2 = wall.getP2().getY()
 
+	 		den = (x1-x2)*(y3-y4) - (y1-y2)*(x3-x4)
+
+	 		if(den==0):
+	 			continue
+
+	 		t = ((x1-x3)*(y3-y4) - (y1-y3)*(x3-x4))/den
+	 		u = -((x1-x2)*(y1-y3) - (y1-y2)*(x1-x3))/den
+
+	 		if( ((t<0) | (t>1)) | (u<0) ):
+	 			continue
+
+	 		collision = True
+	 		pt_x = x1+t*(x2-x1)
+	 		pt_y = y1+t*(y2-y1)
+	 		dist = math.sqrt((pt_x-x3)**2 + (pt_y-y3)**2)
+
+	 		if(dist<ShortestDist):
+	 			ShortestDist = dist
+	 			closestPt = Point(pt_x,pt_y)
+
+	 	if(collision):
+	 		return closestPt
+
+	 	return
+
+class Wall(Line):
+
+	pass
+
+class RayLine(Line):
+
+	def _move(self,dx1,dy1,dx2,dy2):
+		self.p1.x = dx1
+        # self.p1.y = dy1
+        # self.p2.x = dx2
+        # self.p2.y = dy2
